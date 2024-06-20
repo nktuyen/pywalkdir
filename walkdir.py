@@ -789,8 +789,9 @@ class PrintCommand(Command):
         try:
             if self.options.output is None:
                 #Print to console
-                self._printDirectory(self.directory, self.directory.depth, '  ', fields, False)
-                self._printDirectory(self.directory, self.directory.depth, '  ', fields, True)
+                print()
+                self._printDirectory(self.directory, self.directory.depth, ' ', fields, False)
+                self._printDirectory(self.directory, self.directory.depth, ' ', fields, True)
             else:
                 #Write to output file
                 row: int = 0
@@ -980,7 +981,7 @@ class PrintCommand(Command):
                     _ws.write_blank(r, col + root_depth - item.depth, None, new_fmt.build(_wb.add_format()))
         return row 
     
-    def _printDirectory(self, folder: IOFolder, depth: int = 0, separator: str = '  ', fields: list = None, do_print: bool = True):
+    def _printDirectory(self, folder: IOFolder, depth: int = 0, separator: str = ' ', fields: list = None, do_print: bool = True):
         if not do_print: #Only evaluate
             line = f'{(depth-folder.depth) * separator}{folder.name}'
             if self._fields_size.get(S_Sharp) < len(line):
@@ -1028,7 +1029,27 @@ class PrintCommand(Command):
                 else:
                     self._fields_size[S_Extension] = len(folder.kind.name)
         else: #Print
-            pass
+            line = f'{(depth-folder.depth) * separator}{folder.name}'
+            if len(fields) > 0:#There are more fields to print -> Add space to right
+                line += separator * (self._fields_size[S_Sharp] - len(line) + len(separator))
+            if S_Name in fields:
+                line += folder.name
+                line += separator * (self._fields_size[S_Name] - len(folder.name) + len(separator))
+            if S_Path in fields:
+                line += folder.path
+                line += separator * (self._fields_size[S_Path] - len(folder.path) + len(separator))
+            if S_Fullpath in fields:
+                line += folder.full_path
+                line += separator * (self._fields_size[S_Fullpath] - len(folder.full_path) + len(separator))
+            if S_Type in fields:
+                line += folder.kind.name
+                line += separator * (self._fields_size[S_Type] - len(folder.kind.name) + len(separator))
+            if S_Size in fields:
+                line += str(folder.size)
+                line += separator * (self._fields_size[S_Size] - len(str(folder.size)) + len(separator))
+            if S_Extension in fields:
+                line += folder.extension
+            print(line)
 
         folder.status = True
 
@@ -1036,11 +1057,75 @@ class PrintCommand(Command):
             if child.kind == IOKind.DIR:
                 self._printDirectory(child, depth, separator, fields, do_print)
             else:
-                line = f'{(depth-child.depth) * separator}{child.name}'
-                if self._fields_size.get(S_Sharp) < len(line):
-                    self._fields_size[S_Sharp] = len(line)
-                if do_print:
-                    line = f'{line}{" "*(self._fields_size.get(".")-len(line))}'
+                if not do_print: #Only evaluate
+                    line = f'{(depth-child.depth) * separator}{child.name}'
+                    if self._fields_size.get(S_Sharp) < len(line):
+                        self._fields_size[S_Sharp] = len(line)
+                    
+                    if S_Name in fields:
+                        if S_Name in self._fields_size:
+                            if self._fields_size.get(S_Name) < len(child.name):
+                                self._fields_size[S_Name] = len(child.name)
+                        else:
+                            self._fields_size[S_Name] = len(child.name)
+                    
+                    if S_Path in fields:
+                        if S_Path in self._fields_size:
+                            if self._fields_size.get(S_Path) < len(child.path):
+                                self._fields_size[S_Path] = len(child.path)
+                        else:
+                            self._fields_size[S_Path] = len(child.path)
+                    
+                    if S_Fullpath in fields:
+                        if S_Path in self._fields_size:
+                            if self._fields_size.get(S_Fullpath) < len(child.full_path):
+                                self._fields_size[S_Fullpath] = len(child.full_path)
+                        else:
+                            self._fields_size[S_Fullpath] = len(child.full_path)
+                    
+                    if S_Type in fields:
+                        if S_Type in self._fields_size:
+                            if self._fields_size.get(S_Type) < len(child.kind.name):
+                                self._fields_size[S_Type] = len(child.kind.name)
+                        else:
+                            self._fields_size[S_Type] = len(child.kind.name)
+
+                    if S_Size in fields:
+                        if S_Size in self._fields_size:
+                            if self._fields_size.get(S_Size) < len(str(child.size)):
+                                self._fields_size[S_Size] = len(str(child.size))
+                        else:
+                            self._fields_size[S_Size] = len(str(child.size))
+
+                    if S_Extension in fields:
+                        if S_Extension in self._fields_size:
+                            if self._fields_size.get(S_Extension) < len(child.kind.name):
+                                self._fields_size[S_Extension] = len(child.kind.name)
+                        else:
+                            self._fields_size[S_Extension] = len(child.kind.name)
+                else: #Print
+                    line = f'{(depth-child.depth) * separator}{child.name}'
+                    if len(fields) > 0:#There are more fields to print -> Add space to right
+                        line += separator * (self._fields_size[S_Sharp] - len(line) + len(separator))
+                    if S_Name in fields:
+                        line += child.name
+                        line += separator * (self._fields_size[S_Name] - len(child.name) + len(separator))
+                    if S_Path in fields:
+                        line += child.path
+                        line += separator * (self._fields_size[S_Path] - len(child.path) + len(separator))
+                    if S_Fullpath in fields:
+                        line += child.full_path
+                        line += separator * (self._fields_size[S_Fullpath] - len(child.full_path) + len(separator))
+                    if S_Type in fields:
+                        line += child.kind.name
+                        line += separator * (self._fields_size[S_Type] - len(child.kind.name) + len(separator))
+                    if S_Size in fields:
+                        line += str(child.size)
+                        line += separator * (self._fields_size[S_Size] - len(str(child.size)) + len(separator))
+                    if S_Extension in fields:
+                        line += child.extension
+                    print(line)
+                
                 child.status = True
         
 
@@ -1054,7 +1139,7 @@ if __name__=="__main__":
     help: str = ''
     for c in commands.values():
         help += f'\n  {c.name}:    {c.description}'
-    parser: optparse.OptionParser = optparse.OptionParser(usage='%prog directory COMMAND [options]'+ help)
+    parser: optparse.OptionParser = optparse.OptionParser(usage='%prog directory command [options]\n\nCommands:    '+ help)
     errno: int = 1
 
     args = sys.argv[1::]
